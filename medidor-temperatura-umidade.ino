@@ -42,7 +42,7 @@ void loop() {
       
       String data = fillPayload().c_str();
       
-      String connStr = "{url: \"https://api.mlab.com/api/1/databases/prototype-box/collections/measures?apiKey=oqiM13Fju9QXsTwC8Y1WfgUOGJi7dUpK\", data:" + data + ", type: \"POST\", contentType: \"application/json\"}";
+      String connStr = "{url: \"https://su-climate-scanner.herokuapp.com/measure\", data:" + data + ", type: \"POST\", contentType: \"application/json\"}";
 
       client.print(connStr);
       Serial.println(connStr);
@@ -107,11 +107,12 @@ String fillPayload()
   payload += "\",";
 
   //início sensores
-  payload += "\"t\":";
-  payload += temp; 
-  payload += ",";
-  payload += "\"h\":";
+  payload += "\"humidity\":";
   payload += hum;
+  payload += ",";
+  payload += "\"temperature\":";
+  payload += temp;
+  
   //final sensores
 
   payload += "}";
