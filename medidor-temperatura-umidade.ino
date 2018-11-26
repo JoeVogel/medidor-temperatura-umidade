@@ -1,10 +1,11 @@
 /* WiFi */
 #include <ESP8266WiFi.h>
+#include <ESP8266HTTPClient.h>
 const char* ssid     = "VOGEL_NETWORK";
 const char* password = "lalaamoraluna";
 WiFiClient client;
 
-char server[] = "www.google.com";
+char server[] = "su-climate-scanner.herokuapp.com";
 
 /* DHT22 */
 #include <DHT.h>
@@ -21,7 +22,8 @@ String mac;
 void setup() {
   Serial.begin(115200);
   
-  delay(5000);
+  // Wait for serial to initialize.
+  while(!Serial) { }
 
   dht.begin();
 
@@ -29,7 +31,7 @@ void setup() {
 
   wifiConnect();
 
-  delay(1000);
+  delay(2000);
 }
 
 
@@ -41,11 +43,21 @@ void loop() {
       Serial.println("client connected.");
       
       String data = fillPayload().c_str();
-      
-      String connStr = "{url: \"https://su-climate-scanner.herokuapp.com/measure\", data:" + data + ", type: \"POST\", contentType: \"application/json\"}";
 
-      client.print(connStr);
-      Serial.println(connStr);
+      HTTPClient http;
+
+      http.begin("http://"+ String(server) + "/measure");
+      http.addHeader("Content-Type", "text/plain");
+
+      //Serial.println("data: " + data);
+      int httpCode = http.POST(data);
+
+      String payload = http.getString();
+
+      Serial.println("HTTP Code: " + httpCode);
+      Serial.println("HTTP Response: " + payload);
+ 
+      http.end();
     } else {
       // If you couldn't make a connection:
       Serial.println("Connection failed");
@@ -53,7 +65,7 @@ void loop() {
       client.stop();
     }
   }
-  delay(3000);
+  ESP.deepSleep(60 * 60000000);
 }
 
 /***************************************************
@@ -102,22 +114,16 @@ String fillPayload()
 
   getDhtData();
 
-  payload = "{\"mac\":\"";
+  payload = "mac=";
   payload += mac;
-  payload += "\",";
 
   //início sensores
-  payload += "\"humidity\":";
+  payload += "&humidity=";
   payload += hum;
-  payload += ",";
-  payload += "\"temperature\":";
+  payload += "&temperature=";
   payload += temp;
   
   //final sensores
-
-  payload += "}";
-
-  //Serial.println(payload);
 
   return payload;
 
